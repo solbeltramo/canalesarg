@@ -7,62 +7,34 @@
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     <style>
         * { box-sizing: border-box; }
-        body {
-            background-color: #0f0f14;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        h1 { margin: 0 0 20px; font-size: 24px; color: #e50914; }
-        .dashboard {
-            display: flex;
-            width: 100%;
-            max-width: 1200px;
-            gap: 20px;
-            background: #18181f;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,.5);
-        }
-        .contenedor-video { flex: 2; min-width: 0; }
-        .contenedor-video .marco { border-radius: 8px; overflow: hidden; background: #000; }
-        #estado { margin-top: 10px; font-size: 14px; color: #aaa; min-height: 20px; }
-        #estado.error { color: #ff6b6b; }
-        .panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-        .tabs { display: flex; gap: 8px; }
-        .tab {
-            flex: 1; padding: 10px; border: none; border-radius: 6px;
-            background: #262631; color: #fff; cursor: pointer; font-size: 15px;
-        }
-        .tab.activo { background: #e50914; font-weight: bold; }
-        #buscador {
-            width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #333;
-            background: #0f0f14; color: #fff; font-size: 15px;
-        }
-        .playlist {
-            display: flex; flex-direction: column; gap: 8px;
-            max-height: 480px; overflow-y: auto;
-        }
-        .canal-btn {
-            display: flex; align-items: center; gap: 10px;
-            background: #262631; color: #fff; border: none; padding: 10px 12px;
-            text-align: left; border-radius: 6px; cursor: pointer; font-size: 15px;
-            transition: background .2s ease;
-        }
-        .canal-btn:hover { background: #3e3e52; }
-        .canal-btn.activo { background: #e50914; font-weight: bold; }
-        .canal-btn img { width: 32px; height: 32px; object-fit: contain; border-radius: 4px; background: #fff1; flex-shrink: 0; }
-        .vacio { color: #aaa; font-size: 14px; padding: 10px; }
-        footer { margin-top: 20px; font-size: 12px; color: #777; max-width: 1200px; text-align: center; }
-        @media (max-width: 768px) {
-            .dashboard { flex-direction: column; }
-            .playlist { max-height: 320px; }
-        }
+        body { background:#0f0f14; color:#fff; font-family:Arial,sans-serif; margin:0; padding:20px; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+        h1 { margin:0 0 20px; font-size:24px; color:#e50914; }
+        .dashboard { display:flex; width:100%; max-width:1200px; gap:20px; background:#18181f; padding:20px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+        .contenedor-video { flex:2; min-width:0; }
+        .marco { border-radius:8px; overflow:hidden; background:#000; }
+        .marco iframe { width:100%; aspect-ratio:16/9; border:0; display:block; }
+        .oculto { display:none !important; }
+        #estado { margin-top:10px; font-size:14px; color:#aaa; min-height:20px; }
+        #estado.error { color:#ff6b6b; }
+        .panel { flex:1; display:flex; flex-direction:column; gap:10px; min-width:0; }
+        .tabs { display:flex; gap:6px; }
+        .tab { flex:1; padding:10px 4px; border:none; border-radius:6px; background:#262631; color:#fff; cursor:pointer; font-size:14px; }
+        .tab.activo { background:#e50914; font-weight:bold; }
+        input[type=search], input[type=text] { width:100%; padding:10px; border-radius:6px; border:1px solid #333; background:#0f0f14; color:#fff; font-size:14px; }
+        .playlist { display:flex; flex-direction:column; gap:8px; max-height:480px; overflow-y:auto; }
+        .item { display:flex; align-items:center; gap:8px; }
+        .canal-btn { flex:1; display:flex; align-items:center; gap:10px; background:#262631; color:#fff; border:none; padding:10px 12px; text-align:left; border-radius:6px; cursor:pointer; font-size:15px; transition:background .2s; min-width:0; }
+        .canal-btn:hover { background:#3e3e52; }
+        .canal-btn.activo { background:#e50914; font-weight:bold; }
+        .canal-btn img { width:32px; height:32px; object-fit:contain; border-radius:4px; background:#fff1; flex-shrink:0; }
+        .canal-btn span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .borrar { background:#262631; color:#ff6b6b; border:none; border-radius:6px; padding:10px; cursor:pointer; }
+        .agregar { display:flex; flex-direction:column; gap:6px; padding:10px; background:#0f0f14; border-radius:8px; }
+        .agregar button { padding:10px; border:none; border-radius:6px; background:#e50914; color:#fff; cursor:pointer; font-size:14px; }
+        .ayuda { font-size:12px; color:#888; line-height:1.4; }
+        .vacio { color:#aaa; font-size:14px; padding:10px; }
+        footer { margin-top:20px; font-size:12px; color:#777; max-width:1200px; text-align:center; }
+        @media (max-width:768px) { .dashboard { flex-direction:column; } .playlist { max-height:320px; } }
     </style>
 </head>
 <body>
@@ -71,132 +43,191 @@
 
     <div class="dashboard">
         <div class="contenedor-video">
-            <div class="marco"><video controls crossorigin playsinline></video></div>
+            <div class="marco" id="marco-hls"><video controls crossorigin playsinline></video></div>
+            <div class="marco oculto" id="marco-embed"><iframe id="embed" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe></div>
             <div id="estado">Elegí un canal o una película.</div>
         </div>
 
         <div class="panel">
             <div class="tabs">
-                <button class="tab activo" data-tab="canales">📺 Canales AR</button>
+                <button class="tab activo" data-tab="canales">📺 Canales</button>
                 <button class="tab" data-tab="peliculas">🎥 Películas</button>
+                <button class="tab" data-tab="mios">⭐ Mis links</button>
             </div>
             <input id="buscador" type="search" placeholder="Buscar..." />
             <div class="playlist" id="lista"></div>
+
+            <div class="agregar oculto" id="form-agregar">
+                <input id="nuevo-titulo" type="text" placeholder="Nombre (ej: Canal 10 San Francisco)" />
+                <input id="nuevo-url" type="text" placeholder="Link de YouTube, Internet Archive o .m3u8" />
+                <button id="btn-agregar">Agregar a mi lista</button>
+                <div class="ayuda">
+                    Acepta: video o vivo de YouTube (youtube.com/watch?v=..., youtu.be/..., youtube.com/live/...),
+                    canal de YouTube con formato youtube.com/channel/UC... (muestra su vivo),
+                    páginas de archive.org/details/... y streams .m3u8 con https.
+                    Se guarda solo en tu navegador.
+                </div>
+            </div>
         </div>
     </div>
 
     <footer>
-        Solo se reproducen señales que sus titulares publican de forma abierta (lista pública iptv-org) y películas
-        de código abierto de la Blender Foundation. Algunos canales pueden estar caídos o restringidos por región.
+        Solo se reproducen señales que sus titulares publican de forma abierta (lista pública iptv-org, YouTube oficial),
+        películas de dominio público (Internet Archive) y películas de código abierto de la Blender Foundation.
+        Algunos canales pueden estar caídos o restringidos por región.
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
     <script>
-        // ---------- Configuración ----------
-        // Lista pública de canales de Argentina (se actualiza sola)
+        // ================== CONFIGURACIÓN (editá acá) ==================
         const URL_CANALES_AR = "https://iptv-org.github.io/iptv/countries/ar.m3u";
 
-        // Canales fijos de respaldo por si la lista no carga (agregá los tuyos acá)
+        // Canales propios. Podés pegar links de YouTube (vivo), archive.org o .m3u8
+        // Ejemplo: { titulo: "Municipalidad de San Francisco", url: "https://www.youtube.com/channel/UCxxxxxxxx" }
         const CANALES_EXTRA = [
-            // { titulo: "Mi canal", url: "https://.../playlist.m3u8", logo: "" }
         ];
 
-        // Películas libres (Blender Foundation) + streams de prueba
+        // Películas. Acepta los mismos tipos de link.
         const PELICULAS = [
-            { titulo: "Sintel", url: "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8" },
-            { titulo: "Big Buck Bunny", url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-            { titulo: "Tears of Steel", url: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+            { titulo: "Nosferatu (1922) - dominio público", url: "https://archive.org/details/Nosferatu1922" },
+            { titulo: "La noche de los muertos vivos (1968) - dominio público", url: "https://archive.org/details/night_of_the_living_dead" },
+            { titulo: "Sintel (Blender)", url: "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8" },
+            { titulo: "Big Buck Bunny (Blender)", url: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+            { titulo: "Tears of Steel (Blender)", url: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
         ];
+        // ===============================================================
 
-        // ---------- Estado ----------
         const video = document.querySelector("video");
+        const marcoHls = document.getElementById("marco-hls");
+        const marcoEmbed = document.getElementById("marco-embed");
+        const iframe = document.getElementById("embed");
         const lista = document.getElementById("lista");
         const estado = document.getElementById("estado");
         const buscador = document.getElementById("buscador");
+        const formAgregar = document.getElementById("form-agregar");
         const player = new Plyr(video);
-        let hls = null;
-        let tabActual = "canales";
-        let canales = [...CANALES_EXTRA];
-        let activoUrl = null;
+        let hls = null, tabActual = "canales", canales = [...CANALES_EXTRA], activoUrl = null;
 
-        function setEstado(msg, esError = false) {
-            estado.textContent = msg;
-            estado.classList.toggle("error", esError);
+        // ---------- Mis links (localStorage) ----------
+        function leerMios() { try { return JSON.parse(localStorage.getItem("mios") || "[]"); } catch { return []; } }
+        function guardarMios(a) { try { localStorage.setItem("mios", JSON.stringify(a)); } catch {} }
+
+        function setEstado(msg, err = false) { estado.textContent = msg; estado.classList.toggle("error", err); }
+
+        // ---------- Detectar tipo de link ----------
+        function resolver(url) {
+            url = (url || "").trim();
+            let m;
+            if (/\.m3u8(\?|$)/i.test(url)) return { tipo: "hls", src: url };
+            if ((m = url.match(/archive\.org\/(?:details|embed)\/([^\/?#]+)/i)))
+                return { tipo: "embed", src: "https://archive.org/embed/" + m[1] };
+            if ((m = url.match(/youtube\.com\/channel\/(UC[\w-]{20,})/i)))
+                return { tipo: "embed", src: "https://www.youtube.com/embed/live_stream?channel=" + m[1] + "&autoplay=1" };
+            if ((m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|live\/|embed\/|shorts\/))([\w-]{11})/i)))
+                return { tipo: "embed", src: "https://www.youtube.com/embed/" + m[1] + "?autoplay=1" };
+            return null;
         }
 
-        // ---------- Reproducción ----------
-        function cargarVideo(item) {
-            const url = item.url;
-            activoUrl = url;
+        // ---------- Reproducir ----------
+        function cargar(item) {
+            const r = resolver(item.url);
+            if (!r) { setEstado("Link no reconocido.", true); return; }
+            activoUrl = item.url;
             if (hls) { hls.destroy(); hls = null; }
-            setEstado("Cargando: " + item.titulo + "...");
+            video.pause();
 
-            if (Hls.isSupported()) {
-                hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    setEstado("▶ " + item.titulo);
-                    video.play().catch(() => setEstado("Tocá play para comenzar: " + item.titulo));
-                });
-                hls.on(Hls.Events.ERROR, (_, data) => {
-                    if (data.fatal) setEstado("No se pudo reproducir este canal (caído o bloqueado). Probá otro.", true);
-                });
-            } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-                video.src = url;
-                video.play().catch(() => {});
-                setEstado("▶ " + item.titulo);
+            if (r.tipo === "embed") {
+                marcoHls.classList.add("oculto");
+                marcoEmbed.classList.remove("oculto");
+                video.removeAttribute("src");
+                iframe.src = r.src;
+                setEstado("▶ " + item.titulo + " (si no carga, el dueño no permite verlo acá)");
             } else {
-                setEstado("Tu navegador no soporta HLS.", true);
+                marcoEmbed.classList.add("oculto");
+                iframe.src = "about:blank";
+                marcoHls.classList.remove("oculto");
+                setEstado("Cargando: " + item.titulo + "...");
+                if (Hls.isSupported()) {
+                    hls = new Hls();
+                    hls.loadSource(r.src);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        setEstado("▶ " + item.titulo);
+                        video.play().catch(() => setEstado("Tocá play para comenzar: " + item.titulo));
+                    });
+                    hls.on(Hls.Events.ERROR, (_, d) => {
+                        if (d.fatal) setEstado("No se pudo reproducir (caído o bloqueado). Probá otro.", true);
+                    });
+                } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                    video.src = r.src; video.play().catch(() => {});
+                    setEstado("▶ " + item.titulo);
+                } else setEstado("Tu navegador no soporta HLS.", true);
             }
             renderLista();
         }
 
         // ---------- Lista ----------
+        function fuenteActual() {
+            if (tabActual === "canales") return canales;
+            if (tabActual === "peliculas") return PELICULAS;
+            return leerMios();
+        }
+
         function renderLista() {
             const q = buscador.value.trim().toLowerCase();
-            const fuente = tabActual === "canales" ? canales : PELICULAS;
-            const items = fuente.filter(i => i.titulo.toLowerCase().includes(q));
+            const fuente = fuenteActual();
+            formAgregar.classList.toggle("oculto", tabActual !== "mios");
             lista.innerHTML = "";
+            const items = fuente.map((it, idx) => ({ it, idx })).filter(({ it }) => it.titulo.toLowerCase().includes(q));
 
             if (!items.length) {
-                lista.innerHTML = '<div class="vacio">Sin resultados.</div>';
+                lista.innerHTML = '<div class="vacio">' + (tabActual === "mios" ? "Todavía no agregaste nada. Usá el formulario de abajo." : "Sin resultados.") + "</div>";
                 return;
             }
-            items.forEach(item => {
+            items.forEach(({ it, idx }) => {
+                const fila = document.createElement("div");
+                fila.className = "item";
                 const b = document.createElement("button");
-                b.className = "canal-btn" + (item.url === activoUrl ? " activo" : "");
-                if (item.logo) {
+                b.className = "canal-btn" + (it.url === activoUrl ? " activo" : "");
+                if (it.logo) {
                     const img = document.createElement("img");
-                    img.src = item.logo; img.alt = ""; img.loading = "lazy";
+                    img.src = it.logo; img.alt = ""; img.loading = "lazy";
                     img.onerror = () => img.remove();
                     b.appendChild(img);
                 }
-                const span = document.createElement("span");
-                span.textContent = item.titulo;
-                b.appendChild(span);
-                b.addEventListener("click", () => cargarVideo(item));
-                lista.appendChild(b);
+                const s = document.createElement("span");
+                s.textContent = it.titulo;
+                b.appendChild(s);
+                b.addEventListener("click", () => cargar(it));
+                fila.appendChild(b);
+
+                if (tabActual === "mios") {
+                    const x = document.createElement("button");
+                    x.className = "borrar"; x.textContent = "✕"; x.title = "Borrar";
+                    x.addEventListener("click", () => {
+                        const a = leerMios(); a.splice(idx, 1); guardarMios(a); renderLista();
+                    });
+                    fila.appendChild(x);
+                }
+                lista.appendChild(fila);
             });
         }
 
-        // ---------- Parser M3U ----------
+        // ---------- M3U ----------
         function parseM3U(texto) {
-            const out = [];
-            const lineas = texto.split(/\r?\n/);
-            for (let i = 0; i < lineas.length; i++) {
-                const l = lineas[i].trim();
+            const out = [], L = texto.split(/\r?\n/);
+            for (let i = 0; i < L.length; i++) {
+                const l = L[i].trim();
                 if (!l.startsWith("#EXTINF")) continue;
                 const nombre = l.split(",").slice(1).join(",").trim();
                 const logo = (l.match(/tvg-logo="([^"]*)"/) || [])[1] || "";
                 let url = "";
-                for (let j = i + 1; j < lineas.length; j++) {
-                    const s = lineas[j].trim();
+                for (let j = i + 1; j < L.length; j++) {
+                    const s = L[j].trim();
                     if (s && !s.startsWith("#")) { url = s; break; }
                 }
-                // Solo https: desde una web https el navegador bloquea http (contenido mixto)
                 if (url.startsWith("https://")) out.push({ titulo: nombre || "Sin nombre", url, logo });
             }
             return out;
@@ -207,9 +238,8 @@
             try {
                 const res = await fetch(URL_CANALES_AR);
                 if (!res.ok) throw new Error(res.status);
-                const remotos = parseM3U(await res.text());
                 const vistos = new Set(canales.map(c => c.url));
-                remotos.forEach(c => { if (!vistos.has(c.url)) canales.push(c); });
+                parseM3U(await res.text()).forEach(c => { if (!vistos.has(c.url)) canales.push(c); });
                 canales.sort((a, b) => a.titulo.localeCompare(b.titulo, "es"));
             } catch (e) {
                 setEstado("No se pudo cargar la lista de canales. Revisá tu conexión.", true);
@@ -218,16 +248,26 @@
         }
 
         // ---------- Eventos ----------
-        document.querySelectorAll(".tab").forEach(t => {
-            t.addEventListener("click", () => {
-                document.querySelectorAll(".tab").forEach(x => x.classList.remove("activo"));
-                t.classList.add("activo");
-                tabActual = t.dataset.tab;
-                buscador.value = "";
-                renderLista();
-            });
-        });
+        document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+            document.querySelectorAll(".tab").forEach(x => x.classList.remove("activo"));
+            t.classList.add("activo");
+            tabActual = t.dataset.tab;
+            buscador.value = "";
+            renderLista();
+        }));
         buscador.addEventListener("input", renderLista);
+
+        document.getElementById("btn-agregar").addEventListener("click", () => {
+            const titulo = document.getElementById("nuevo-titulo").value.trim();
+            const url = document.getElementById("nuevo-url").value.trim();
+            if (!titulo || !url) { setEstado("Completá nombre y link.", true); return; }
+            if (!resolver(url)) { setEstado("Link no reconocido. Usá YouTube, archive.org o .m3u8 con https.", true); return; }
+            const a = leerMios(); a.push({ titulo, url }); guardarMios(a);
+            document.getElementById("nuevo-titulo").value = "";
+            document.getElementById("nuevo-url").value = "";
+            setEstado("Agregado: " + titulo);
+            renderLista();
+        });
 
         cargarCanalesAR();
     </script>
