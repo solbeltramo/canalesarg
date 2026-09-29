@@ -32,6 +32,8 @@
         .agregar { display:flex; flex-direction:column; gap:6px; padding:10px; background:#0f0f14; border-radius:8px; }
         .agregar button { padding:10px; border:none; border-radius:6px; background:#e50914; color:#fff; cursor:pointer; font-size:14px; }
         .ayuda { font-size:12px; color:#888; line-height:1.4; }
+        .filtro { display:flex; align-items:center; gap:8px; font-size:13px; color:#ccc; cursor:pointer; }
+        .filtro input { width:auto; }
         .vacio { color:#aaa; font-size:14px; padding:10px; }
         footer { margin-top:20px; font-size:12px; color:#777; max-width:1200px; text-align:center; }
         @media (max-width:768px) { .dashboard { flex-direction:column; } .playlist { max-height:320px; } }
@@ -55,6 +57,10 @@
                 <button class="tab" data-tab="mios">⭐ Mis links</button>
             </div>
             <input id="buscador" type="search" placeholder="Buscar..." />
+            <label class="filtro" id="filtro-ok">
+                <input type="checkbox" id="solo-ok" checked>
+                <span id="txt-ok">Solo canales que funcionan</span>
+            </label>
             <div class="playlist" id="lista"></div>
 
             <div class="agregar oculto" id="form-agregar">
@@ -87,6 +93,7 @@
         // Canales propios. Podés pegar links de YouTube (vivo), archive.org o .m3u8
         // Ejemplo: { titulo: "Municipalidad de San Francisco", url: "https://www.youtube.com/channel/UCxxxxxxxx" }
         const CANALES_EXTRA = [
+            { titulo: "TN - Todo Noticias (YouTube oficial)", url: "https://www.youtube.com/channel/UCj6PcyLvpnIRT_2W_mwa9Aw" }
         ];
 
         // Películas. Acepta los mismos tipos de link.
@@ -179,8 +186,12 @@
             const q = buscador.value.trim().toLowerCase();
             const fuente = fuenteActual();
             formAgregar.classList.toggle("oculto", tabActual !== "mios");
+            document.getElementById("filtro-ok").classList.toggle("oculto", tabActual !== "canales");
+            const soloOk = document.getElementById("solo-ok").checked && tabActual === "canales";
             lista.innerHTML = "";
-            const items = fuente.map((it, idx) => ({ it, idx })).filter(({ it }) => it.titulo.toLowerCase().includes(q));
+            const items = fuente.map((it, idx) => ({ it, idx }))
+                .filter(({ it }) => it.titulo.toLowerCase().includes(q))
+                .filter(({ it }) => !soloOk || it.ok === true);
 
             if (!items.length) {
                 lista.innerHTML = '<div class="vacio">' + (tabActual === "mios" ? "Todavía no agregaste nada. Usá el formulario de abajo." : "Sin resultados.") + "</div>";
@@ -233,6 +244,38 @@
             return out;
         }
 
+        // Prueba si el manifiesto de un canal responde y permite CORS (si no, hls.js tampoco puede reproducirlo)
+        async function probar(c) {
+            const r = resolver(c.url);
+            if (!r || r.tipo !== "hls") { c.ok = true; return; }
+            const ctl = new AbortController();
+            const t = setTimeout(() => ctl.abort(), 7000);
+            try {
+                const res = await fetch(r.src, { signal: ctl.signal });
+                const txt = res.ok ? await res.text() : "";
+                c.ok = txt.trimStart().startsWith("#EXTM3U");
+            } catch { c.ok = false; }
+            clearTimeout(t);
+        }
+
+        async function sondear() {
+            const pendientes = canales.filter(c => c.ok === undefined);
+            let hechos = 0, buenos = 0, ultimoRender = 0;
+            const txt = document.getElementById("txt-ok");
+            async function worker() {
+                while (pendientes.length) {
+                    const c = pendientes.shift();
+                    await probar(c);
+                    hechos++; if (c.ok) buenos++;
+                    txt.textContent = "Solo canales que funcionan (" + buenos + " ok, probando " + hechos + "/" + (hechos + pendientes.length) + ")";
+                    if (Date.now() - ultimoRender > 800) { ultimoRender = Date.now(); if (tabActual === "canales") renderLista(); }
+                }
+            }
+            await Promise.all(Array.from({ length: 8 }, worker));
+            txt.textContent = "Solo canales que funcionan (" + buenos + ")";
+            renderLista();
+        }
+
         async function cargarCanalesAR() {
             lista.innerHTML = '<div class="vacio">Cargando canales...</div>';
             try {
@@ -245,6 +288,7 @@
                 setEstado("No se pudo cargar la lista de canales. Revisá tu conexión.", true);
             }
             renderLista();
+            sondear();
         }
 
         // ---------- Eventos ----------
@@ -256,6 +300,7 @@
             renderLista();
         }));
         buscador.addEventListener("input", renderLista);
+        document.getElementById("solo-ok").addEventListener("change", renderLista);
 
         document.getElementById("btn-agregar").addEventListener("click", () => {
             const titulo = document.getElementById("nuevo-titulo").value.trim();
